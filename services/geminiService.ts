@@ -7,7 +7,8 @@ export interface ImageInput {
 }
 
 /**
- * Generates or edits an image using Gemini AI.
+ * Menghasilkan atau mengedit gambar menggunakan Gemini AI.
+ * Inisialisasi dilakukan di dalam fungsi untuk memastikan pengambilan API_KEY terbaru.
  */
 export const generateStudioImage = async (
   images: ImageInput[],
@@ -19,12 +20,14 @@ export const generateStudioImage = async (
     throw new Error("API_KEY_MISSING");
   }
 
+  // Selalu buat instance baru untuk memastikan mendapatkan konteks env terbaru
   const ai = new GoogleGenAI({ apiKey });
   const modelName = 'gemini-2.5-flash-image';
 
   const parts: any[] = [];
 
   images.forEach((img) => {
+    // Bersihkan prefix base64 jika ada
     const base64Data = img.base64.includes(',') ? img.base64.split(',')[1] : img.base64;
     parts.push({
       inlineData: {
@@ -34,18 +37,18 @@ export const generateStudioImage = async (
     });
   });
 
-  // Instruksi sistem yang sangat spesifik untuk detail wajah (High Fidelity)
+  // Instruksi sistem yang diperkuat untuk akurasi wajah dan estetika studio
   const qualityDirectives = `
-    - EXTREME FACIAL DETAIL: Focus on hyper-realistic eyes, skin pores, fine facial hair, and realistic lip textures.
-    - ANATOMICAL ACCURACY: Ensure precise bone structure and realistic human proportions.
-    - STUDIO LIGHTING: Use cinematic lighting with professional bokeh and sharp focus.
-    - HIGH FIDELITY: Maintain 1:1 facial likeness if a reference image is provided.
-    - STYLE: Masterpiece, 8k, professional photography, high dynamic range.
+    - ULTRA HIGH FIDELITY: Maintain 1:1 facial likeness of the subjects provided.
+    - FACIAL ACCURACY: Realistic eyes, detailed skin textures, and natural shadows.
+    - STUDIO LIGHTING: Cinematic lighting, professional photography style, sharp focus.
+    - MASTERPIECE: 8k resolution feel, high dynamic range, clean composition.
+    - If no image is provided, generate from scratch based on: ${prompt}.
   `.trim();
 
   const systemContext = images.length > 0 
-    ? `TASK: High-Fidelity Facial Editing. INSTRUCTION: ${prompt}. \n\nQUALITY RULES: ${qualityDirectives}`
-    : `TASK: Photo-Realistic Human Generation. DESCRIPTION: ${prompt}. \n\nQUALITY RULES: ${qualityDirectives}`;
+    ? `TASK: High-End Portrait Editing. INSTRUCTION: ${prompt}. \n\nQUALITY RULES: ${qualityDirectives}`
+    : `TASK: Professional Image Generation. DESCRIPTION: ${prompt}. \n\nQUALITY RULES: ${qualityDirectives}`;
 
   parts.push({ text: systemContext });
 
@@ -62,6 +65,7 @@ export const generateStudioImage = async (
 
     let generatedBase64 = "";
     
+    // Iterasi part untuk menemukan data gambar sesuai regulasi
     if (response.candidates && response.candidates[0]?.content?.parts) {
       for (const part of response.candidates[0].content.parts) {
         if (part.inlineData) {
@@ -77,7 +81,7 @@ export const generateStudioImage = async (
 
     return generatedBase64;
   } catch (error: any) {
-    console.error("Gemini API Error Detail:", error);
+    console.error("Gemini API Error:", error);
     throw error;
   }
 };
