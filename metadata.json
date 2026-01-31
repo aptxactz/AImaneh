@@ -1,0 +1,5 @@
+{
+  "name": "AImaneh Photo Editor",
+  "description": "An advanced AI-powered photo editing and generation suite. Upload images to edit them with natural language or generate stunning visuals from scratch. Features high-quality JPEG export with custom watermarking.",
+  "requestFramePermissions": []
+}
